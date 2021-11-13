@@ -9,18 +9,24 @@ public class RoverDepositingRegolithAgent : MonoBehaviour
 
     public Transform dome;
 
-    public int step = 0;
+    public int regoltihAmmo = 0;
 
-    public float angle = 10;
+    public enum Action { GetRegolith, MoveToDome, LookingForNextPoint, Building };
+    public Action action;
 
-    public Vector3 beginingPoint;
+    public float speed = 3.5f;
+
     public Vector3 destination;
-    public float DistanceBetweenBeginingAndDome;
+
+    public float maxDistanceFromDome = 35;
+
+    public float minDistanceBetweenTwoPoint = 10.0f;
+    public float maxDistanceBetweenTwoPoint = 20.0f;
+
+    public float domeRadius = 15.0f;
 
 
-    public float domeRadius = 1.0f;
-
-    public bool isBuilding = false;
+    // Building with Pooler
     public float buildingDelay = 1;
     public float lastBuildingTime = 0;
     ObjectPooler objectPooler;
@@ -31,34 +37,40 @@ public class RoverDepositingRegolithAgent : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        DistanceBetweenBeginingAndDome = Vector3.Distance(beginingPoint, dome.position);
         objectPooler = ObjectPooler.Instance;
+
+        action = Action.GetRegolith;
+
+        agent.speed = speed;
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (step == 0) goGetRegolith();
-        if (step == 1) goToBeginingPoint();
-        if (step == 2) goDeposeRegolith();
-        if (step == 3) goToBeginingPoint();
-        if (step == 4) CalculateNewBeginPoint();
-        if (step > 4)
-        {
-            step = 0;
-        }
+        if (action == Action.GetRegolith) goGetRegolith();
+
+        if (action == Action.MoveToDome) goToDome();
+
+        if (action == Action.LookingForNextPoint) SetNextBuildingPoint();
+
+        if (action == Action.Building) Build();
+
+
+
+
 
     }
 
-    void goDeposeRegolith()
+    void goToDome()
     {
         destination = dome.position;
         agent.SetDestination(destination);
 
         if (Vector3.Distance(destination, transform.position) < domeRadius)
         {
-            step++;
-            isBuilding = true;
+            transform.LookAt(-transform.forward + transform.position);
+            action = Action.LookingForNextPoint;
+
         }
     }
 
@@ -70,7 +82,8 @@ public class RoverDepositingRegolithAgent : MonoBehaviour
 
         if(Vector3.Distance(destination, transform.position) < 2f)
         {
-            step++;
+            regoltihAmmo = 100;
+            action = Action.MoveToDome;
         }
     }
 
@@ -97,38 +110,55 @@ public class RoverDepositingRegolithAgent : MonoBehaviour
     }
 
 
-    void goToBeginingPoint()
+    void SetNextBuildingPoint()
     {
-        destination = beginingPoint;
+        float angle = Random.Range(90, -90);
+        float d = Random.Range(minDistanceBetweenTwoPoint,maxDistanceBetweenTwoPoint);
+
+        Vector3 vector = Quaternion.Euler(0, angle, 0) * transform.forward;
+        Vector3 nexBuildingPoint = vector * d;
+
+        nexBuildingPoint += transform.position;
+
+        destination = nexBuildingPoint;
+
+        Debug.Log(destination);
+
+        action = Action.Building;
+    }
+
+
+    void Build()
+    {
+
         agent.SetDestination(destination);
 
-        if (Vector3.Distance(destination, transform.position) < 2f)
+        if (Time.time - lastBuildingTime > buildingDelay/speed)
         {
-            step++;
-            isBuilding = false;
-        }
-
-
-        if (isBuilding)
-        {
-            transform.LookAt(new Vector3(dome.position.x, transform.position.y,dome.position.z));
-
-
-            if(Time.time - lastBuildingTime > buildingDelay)
+            lastBuildingTime = Time.time;
+            objectPooler.SpawnFromPool("Cube", transform.position, Quaternion.identity);
+            
+            
+            regoltihAmmo--;
+            if(regoltihAmmo <= 0)
             {
-                lastBuildingTime = Time.time;
-                objectPooler.SpawnFromPool("Cube", transform.position, Quaternion.identity);
+                action = Action.GetRegolith;
             }
         }
 
+        if (Vector3.Distance(destination, transform.position) < 2f)
+        {
+            if(Vector3.Distance(transform.position, dome.position) > maxDistanceFromDome)
+            {
+
+                action = Action.MoveToDome;
+            }
+            else
+            {
+
+                action = Action.LookingForNextPoint;
+            }
+        }
     }
 
-    void CalculateNewBeginPoint()
-    {
-        Vector3 newVector = new Vector3(0, 2, 0);
-        newVector.x = beginingPoint.x * Mathf.Cos(Mathf.Deg2Rad * angle) - beginingPoint.z * Mathf.Sin(Mathf.Deg2Rad * angle);
-        newVector.z = beginingPoint.z * Mathf.Cos(Mathf.Deg2Rad * angle) + beginingPoint.x * Mathf.Sin(Mathf.Deg2Rad * angle);
-        beginingPoint = newVector;
-        step++;
-    }
 }
