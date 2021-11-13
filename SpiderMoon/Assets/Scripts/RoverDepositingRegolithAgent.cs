@@ -9,43 +9,56 @@ public class RoverDepositingRegolithAgent : MonoBehaviour
 
     public Transform dome;
 
-    public bool walkPointSet = true;
-    public bool hasregolith = false;
+    public int step = 0;
+
+    public float angle = 10;
+
+    public Vector3 beginingPoint;
+    public Vector3 destination;
+    public float DistanceBetweenBeginingAndDome;
 
     // Start is called before the first frame update
     void Start()
     {
-        
+        DistanceBetweenBeginingAndDome = Vector3.Distance(beginingPoint, dome.position);
+
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (!hasregolith) goGetRegolith();
-        if (hasregolith) goDeposeRegolith();
+        if (step == 0) goGetRegolith();
+        if (step == 1) goToBeginingPoint();
+        if (step == 2) goDeposeRegolith();
+        if (step == 3) goToBeginingPoint();
+        if (step == 4) CalculateNewBeginPoint();
+        if (step > 4)
+        {
+            step = 0;
+        }
 
     }
 
     void goDeposeRegolith()
     {
-        
-        agent.SetDestination(dome.position);
+        destination = dome.position;
+        agent.SetDestination(destination);
 
-        if (Vector3.Distance(dome.position, transform.position) < 5f)
+        if (Vector3.Distance(destination, transform.position) < 2f)
         {
-            hasregolith = false;
+            step++;            
         }
     }
 
 
     void goGetRegolith()
     {
-        Vector3 regolithRefillPosition = getNearestRegolithPosition();
-        agent.SetDestination(regolithRefillPosition);
+        Vector3 destination = getNearestRegolithPosition();
+        agent.SetDestination(destination);
 
-        if(Vector3.Distance(regolithRefillPosition, transform.position) < 5f)
+        if(Vector3.Distance(destination, transform.position) < 2f)
         {
-            hasregolith = true;
+            step++;
         }
     }
 
@@ -69,5 +82,27 @@ public class RoverDepositingRegolithAgent : MonoBehaviour
         }
 
         return nearestRegolithPosition;
+    }
+
+
+    void goToBeginingPoint()
+    {
+        destination = beginingPoint;
+        agent.SetDestination(destination);
+
+        if (Vector3.Distance(destination, transform.position) < 2f)
+        {
+            step++;
+        }
+
+    }
+
+    void CalculateNewBeginPoint()
+    {
+        Vector3 newVector = new Vector3(0, 2, 0);
+        newVector.x = beginingPoint.x * Mathf.Cos(Mathf.Deg2Rad * angle) - beginingPoint.z * Mathf.Sin(Mathf.Deg2Rad * angle);
+        newVector.z = beginingPoint.z * Mathf.Cos(Mathf.Deg2Rad * angle) + beginingPoint.x * Mathf.Sin(Mathf.Deg2Rad * angle);
+        beginingPoint = newVector;
+        step++;
     }
 }
