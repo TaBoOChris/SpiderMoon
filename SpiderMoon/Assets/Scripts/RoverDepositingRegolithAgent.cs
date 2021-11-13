@@ -124,6 +124,8 @@ public class RoverDepositingRegolithAgent : MonoBehaviour
 
         if (isBuilding)
         {
+            transform.LookAt(new Vector3(dome.position.x, transform.position.y,dome.position.z));
+
             float[,] modifierHeights = new float[1, 1];
             modifierHeights[0, 0] =1f / terrainData.size.y;
             int maxX = (int)((transform.position.x / terrainData.size.x) * heightmapWidth ) + heightmapWidth/2;
