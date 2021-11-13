@@ -17,7 +17,8 @@ public class RoverDepositingRegolithAgent : MonoBehaviour
     public Vector3 destination;
     public float DistanceBetweenBeginingAndDome;
 
-    
+
+    public float domeRadius = 1.0f;
 
     public bool isBuilding = false;
 
@@ -67,7 +68,7 @@ public class RoverDepositingRegolithAgent : MonoBehaviour
         destination = dome.position;
         agent.SetDestination(destination);
 
-        if (Vector3.Distance(destination, transform.position) < 2f)
+        if (Vector3.Distance(destination, transform.position) < domeRadius)
         {
             step++;
             isBuilding = true;
