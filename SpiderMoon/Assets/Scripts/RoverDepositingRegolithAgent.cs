@@ -17,11 +17,34 @@ public class RoverDepositingRegolithAgent : MonoBehaviour
     public Vector3 destination;
     public float DistanceBetweenBeginingAndDome;
 
+    
+
+    public bool isBuilding = false;
+
+
+    // ---- Terrain
+    public Terrain terrain;
+    public TerrainData terrainData;
+    private int heightmapWidth;
+    private int heightmapHeight;
+    private float[,] heights;
+
+
+
     // Start is called before the first frame update
     void Start()
     {
         DistanceBetweenBeginingAndDome = Vector3.Distance(beginingPoint, dome.position);
 
+        //--- terrain
+        terrainData = terrain.terrainData;
+        heightmapHeight = terrainData.heightmapResolution;
+        heightmapWidth = terrainData.heightmapResolution;
+        heights = terrainData.GetHeights(0, 0, heightmapWidth, heightmapHeight);
+
+        
+
+        
     }
 
     // Update is called once per frame
@@ -46,7 +69,8 @@ public class RoverDepositingRegolithAgent : MonoBehaviour
 
         if (Vector3.Distance(destination, transform.position) < 2f)
         {
-            step++;            
+            step++;
+            isBuilding = true;
         }
     }
 
@@ -93,6 +117,20 @@ public class RoverDepositingRegolithAgent : MonoBehaviour
         if (Vector3.Distance(destination, transform.position) < 2f)
         {
             step++;
+            isBuilding = false;
+        }
+
+
+        if (isBuilding)
+        {
+            float[,] modifierHeights = new float[1, 1];
+            modifierHeights[0, 0] =1f / terrainData.size.y;
+            int maxX = (int)((transform.position.x / terrainData.size.x) * heightmapWidth ) + heightmapWidth/2;
+            int maxy = (int)((transform.position.z / terrainData.size.z) * heightmapHeight) + heightmapHeight/2;
+            terrainData.SetHeights(
+                maxX,
+                maxy, 
+                modifierHeights);
         }
 
     }
