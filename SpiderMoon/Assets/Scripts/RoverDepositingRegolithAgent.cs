@@ -21,14 +21,10 @@ public class RoverDepositingRegolithAgent : MonoBehaviour
     public float domeRadius = 1.0f;
 
     public bool isBuilding = false;
+    public float buildingDelay = 1;
+    public float lastBuildingTime = 0;
+    ObjectPooler objectPooler;
 
-
-    // ---- Terrain
-    public Terrain terrain;
-    public TerrainData terrainData;
-    private int heightmapWidth;
-    private int heightmapHeight;
-    private float[,] heights;
 
 
 
@@ -36,16 +32,7 @@ public class RoverDepositingRegolithAgent : MonoBehaviour
     void Start()
     {
         DistanceBetweenBeginingAndDome = Vector3.Distance(beginingPoint, dome.position);
-
-        //--- terrain
-        terrainData = terrain.terrainData;
-        heightmapHeight = terrainData.heightmapResolution;
-        heightmapWidth = terrainData.heightmapResolution;
-        heights = terrainData.GetHeights(0, 0, heightmapWidth, heightmapHeight);
-
-        
-
-        
+        objectPooler = ObjectPooler.Instance;
     }
 
     // Update is called once per frame
@@ -126,14 +113,12 @@ public class RoverDepositingRegolithAgent : MonoBehaviour
         {
             transform.LookAt(new Vector3(dome.position.x, transform.position.y,dome.position.z));
 
-            float[,] modifierHeights = new float[1, 1];
-            modifierHeights[0, 0] =1f / terrainData.size.y;
-            int maxX = (int)((transform.position.x / terrainData.size.x) * heightmapWidth ) + heightmapWidth/2;
-            int maxy = (int)((transform.position.z / terrainData.size.z) * heightmapHeight) + heightmapHeight/2;
-            terrainData.SetHeights(
-                maxX,
-                maxy, 
-                modifierHeights);
+
+            if(Time.time - lastBuildingTime > buildingDelay)
+            {
+                lastBuildingTime = Time.time;
+                objectPooler.SpawnFromPool("Cube", transform.position, Quaternion.identity);
+            }
         }
 
     }
