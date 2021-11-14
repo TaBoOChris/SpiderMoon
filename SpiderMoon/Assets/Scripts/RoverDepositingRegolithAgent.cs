@@ -9,7 +9,7 @@ public class RoverDepositingRegolithAgent : MonoBehaviour
 
     public Transform dome;
 
-    public int regoltihAmmo = 0;
+    public int regoltihAmmo = 400;
 
     public enum Action { GetRegolith, MoveToDome, LookingForNextPoint, Building };
     public Action action;
@@ -32,14 +32,14 @@ public class RoverDepositingRegolithAgent : MonoBehaviour
     ObjectPooler objectPooler;
 
 
-
+    bool movingToFoyer = false;
 
     // Start is called before the first frame update
     void Start()
     {
         objectPooler = ObjectPooler.Instance;
 
-        action = Action.GetRegolith;
+        action = Action.MoveToDome;
 
         agent.speed = speed;
     }
@@ -112,6 +112,41 @@ public class RoverDepositingRegolithAgent : MonoBehaviour
 
     void SetNextBuildingPoint()
     {
+        if(!movingToFoyer)
+            objectPooler.SpawnFromPool("Foyer", transform.position, Quaternion.identity);
+
+
+        // try to find a foyer cloth 
+        GameObject[] foyers = GameObject.FindGameObjectsWithTag("Foyer");
+        Debug.Log("Il y a " + foyers.Length + "Foyer");
+        List<GameObject> potentialNextFoyers = new List<GameObject>();
+        foreach (GameObject foyer in foyers)
+        {
+            float distanceFoyerRover =  Vector3.Distance(foyer.transform.position, transform.position);
+            float distanceFoyerDome  =  Vector3.Distance(foyer.transform.position, dome.position);
+            float distancePlayerDome =  Vector3.Distance(dome.position, transform.position);
+            if (distanceFoyerRover < 20 && distanceFoyerRover > 5 && distanceFoyerDome - 5  > distancePlayerDome  )
+            {
+                potentialNextFoyers.Add(foyer); 
+            }
+        }
+
+        int size = potentialNextFoyers.Count;
+        bool chance = (int)Random.Range(0, 5) < 3 ;
+
+        if (size > 0  && chance)
+        {
+            destination = potentialNextFoyers[(int)Random.Range(0, size)].transform.position;
+
+            movingToFoyer = true;
+            action = Action.Building;
+            return;
+        }
+
+
+        // no foyer, let's calculate next point
+        movingToFoyer = false;
+
         float angle = Random.Range(90, -90);
         float d = Random.Range(minDistanceBetweenTwoPoint,maxDistanceBetweenTwoPoint);
 
@@ -135,6 +170,7 @@ public class RoverDepositingRegolithAgent : MonoBehaviour
         if (Time.time - lastBuildingTime > buildingDelay/speed)
         {
             lastBuildingTime = Time.time;
+
             objectPooler.SpawnFromPool("Cube", transform.position, Quaternion.identity);
             
             
@@ -145,12 +181,16 @@ public class RoverDepositingRegolithAgent : MonoBehaviour
             }
         }
 
-        if (Vector3.Distance(destination, transform.position) < 2f)
+        // si il est arrivé à destination
+        if (Vector3.Distance(destination, transform.position) < 1f)
         {
-            if(Vector3.Distance(transform.position, dome.position) > maxDistanceFromDome)
+            if(Vector3.Distance(transform.position, dome.position) > maxDistanceFromDome)   // la spider est trop loin
             {
-
-                action = Action.MoveToDome;
+                if (regoltihAmmo < 30)
+                    action = Action.GetRegolith;
+                else
+                    action = Action.MoveToDome;
+                
             }
             else
             {

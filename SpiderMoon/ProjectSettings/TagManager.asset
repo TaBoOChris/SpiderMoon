@@ -6,6 +6,7 @@ TagManager:
   tags:
   - Rover
   - Dome
+  - Foyer
   layers:
   - Default
   - TransparentFX
