@@ -236,6 +236,8 @@ public class RoverDepositingRegolithAgent : MonoBehaviour
         }        
     }
 
+
+    // DEBUG
     void OnDrawGizmosSelected()
     {
         // Draw a yellow sphere at the transform's position

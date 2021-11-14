@@ -629,10 +629,10 @@ MonoBehaviour:
   pools:
   - tag: Cube
     prefab: {fileID: 7714196025571514480, guid: cf9013943964e614c8a1294936686b0b, type: 3}
-    size: 3000
+    size: 6000
   - tag: Foyer
     prefab: {fileID: 7714196025571514480, guid: 31b575f0e03a8a240b1985d5f9f16a5c, type: 3}
-    size: 200
+    size: 500
 --- !u!4 &537033906
 Transform:
   m_ObjectHideFlags: 0
