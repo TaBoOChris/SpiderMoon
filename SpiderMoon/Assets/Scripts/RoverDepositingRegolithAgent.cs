@@ -122,7 +122,6 @@ public class RoverDepositingRegolithAgent : MonoBehaviour
 
         destination = nexBuildingPoint;
 
-        Debug.Log(destination);
 
         action = Action.Building;
     }
@@ -159,6 +158,48 @@ public class RoverDepositingRegolithAgent : MonoBehaviour
                 action = Action.LookingForNextPoint;
             }
         }
+    }
+
+
+    private void OnTriggerStay(Collider other)
+    {
+        if (other.CompareTag("Rover"))
+        {
+            Debug.Log("Move Rover");
+            Transform otherEntity = other.transform;
+            Transform thisEntity = transform;
+            //transform.position = (thisEntity.position - otherEntity.position).normalized * 16.0f + otherEntity.position;
+            otherEntity.GetComponent<Rigidbody>().AddForce((otherEntity.position - thisEntity.position).normalized *5f);
+        }
+
+    }
+
+    
+
+    private void OnTriggerEnter(Collider other)
+    {
+        //Debug.Log(other.name);
+
+        if (other.CompareTag("Dome") && action == Action.Building)
+        {
+            Vector3 vector = dome.position - transform.position;
+            if (Vector3.Angle(vector, transform.forward) < 90)
+            {
+                Debug.Log("BackToDome");
+                action = Action.MoveToDome;
+
+            }
+        }
+
+
+        
+    }
+
+    void OnDrawGizmosSelected()
+    {
+        // Draw a yellow sphere at the transform's position
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawSphere(transform.position, GetComponent<SphereCollider>().radius);
     }
 
 }
